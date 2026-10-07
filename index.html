@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘과 어제 — be동사 놀이터</title>
+<style>
+:root {
+  --ink:#24324b; --muted:#63728b; --blue:#4568dc;
+  --purple:#8057cf; --line:#e1e7f2; --green:#18764b;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; color:var(--ink); background:#f3f6ff;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+button, select { font:inherit; }
+button { cursor:pointer; touch-action:manipulation; }
+button:focus-visible, select:focus-visible {
+  outline:3px solid #f3b52f; outline-offset:4px;
+}
+button:disabled { cursor:default; opacity:.65; }
+.app { max-width:920px; margin:auto; padding:26px 18px 50px; }
+header { text-align:center; margin-bottom:24px; }
+h1 { font-size:clamp(26px,5vw,38px); margin:10px 0; }
+h2 { margin-top:0; font-size:24px; }
+p { line-height:1.65; }
+.subtitle { color:var(--muted); margin:0; }
+nav { display:flex; gap:10px; margin:24px 0; }
+.tab {
+  flex:1; padding:15px 8px; border:1px solid var(--line);
+  border-radius:16px; background:white; color:var(--ink); font-weight:800;
+}
+.tab.active { background:var(--blue); color:white; border-color:var(--blue); }
+.panel {
+  background:white; border:1px solid var(--line); border-radius:24px;
+  padding:26px; box-shadow:0 8px 30px #29366b08;
+}
+[hidden] { display:none !important; }
+.notice {
+  background:#eef3ff; border-radius:16px; padding:14px 18px;
+  line-height:1.8; margin-bottom:22px;
+}
+.pill {
+  display:inline-block; padding:7px 13px; border-radius:30px;
+  background:#eaf0ff; color:var(--blue); font-weight:800;
+}
+.pill.past { background:#f1eaff; color:var(--purple); }
+.subjects { display:flex; flex-wrap:wrap; gap:9px; margin:20px 0; }
+.subject {
+  min-width:72px; padding:12px 18px; border:1px solid var(--line);
+  border-radius:13px; background:white; color:var(--ink); font-weight:750;
+}
+.subject.active { border-color:var(--blue); background:#edf2ff; color:var(--blue); }
+.cards { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.card {
+  padding:25px 16px; border-radius:20px; background:#f0f5ff;
+  text-align:center; border:2px solid #dfe9ff;
+}
+.card.past { background:#f6f0ff; border-color:#eadfff; }
+.phrase { font-size:clamp(32px,7vw,48px); font-weight:850; margin:18px 0 8px; }
+.phrase strong { color:var(--blue); }
+.past .phrase strong { color:var(--purple); }
+.translation { color:var(--muted); min-height:25px; }
+.example { font-size:20px; font-weight:700; margin:18px 0 5px; }
+.listen {
+  border:1px solid var(--line); background:white; border-radius:12px;
+  padding:10px 15px; margin-top:12px; color:var(--ink); font-weight:700;
+}
+.rule {
+  text-align:center; font-size:19px; font-weight:750;
+  padding:18px; background:#fff7df; border-radius:16px; margin-top:18px;
+}
+.actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+.primary, .secondary {
+  border:0; border-radius:13px; padding:13px 20px; font-weight:800;
+}
+.primary { background:var(--blue); color:white; }
+.secondary { background:#edf1f8; color:var(--ink); }
+.table-wrap { overflow-x:auto; margin-top:24px; }
+table { width:100%; border-collapse:collapse; text-align:center; }
+caption { text-align:left; font-size:19px; font-weight:800; margin-bottom:12px; }
+th, td { padding:12px 8px; border-bottom:1px solid var(--line); }
+th { background:#f5f7fc; }
+td:nth-child(2) { color:var(--blue); font-weight:800; }
+td:nth-child(3) { color:var(--purple); font-weight:800; }
+.controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+select {
+  border:1px solid var(--line); border-radius:12px; padding:11px;
+  background:white; color:var(--ink);
+}
+.quiz-top { display:flex; justify-content:space-between; gap:12px; margin:20px 0 10px; }
+.track { height:10px; border-radius:20px; background:#edf1f8; overflow:hidden; }
+.fill { height:100%; width:0; background:var(--blue); transition:width .25s; }
+.question { text-align:center; padding:30px 0 12px; }
+.question-line { font-size:clamp(28px,6vw,42px); font-weight:850; margin:20px 0; }
+.blank { color:var(--blue); border-bottom:3px solid var(--blue); padding:0 12px; }
+.choices { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.choice {
+  border:2px solid var(--line); border-radius:17px;
+  background:white; padding:20px 8px; font-size:25px;
+  font-weight:800; color:var(--ink);
+}
+.choice:disabled { opacity:1; }
+.choice.correct { background:#e6f7ec; border-color:#54a775; color:var(--green); }
+.choice.wrong { background:#fff0ee; border-color:#e99b93; color:#ab3b31; }
+.feedback { min-height:88px; padding:18px 0 0; line-height:1.7; }
+.feedback.good { color:var(--green); }
+.feedback.bad { color:#ab3b31; }
+.result { text-align:center; padding:18px 0; }
+.score { font-size:54px; font-weight:850; color:var(--blue); margin:18px 0; }
+.review { text-align:left; margin-top:24px; }
+.review-item {
+  background:#f5f7fc; border-radius:14px; padding:14px 16px;
+  margin-bottom:10px; line-height:1.7;
+}
+.status { color:var(--muted); font-size:14px; margin-top:14px; }
+@media (max-width:580px) {
+  .app { padding:18px 12px 32px; }
+  .panel { padding:20px 15px; }
+  .cards { grid-template-columns:1fr; }
+  .card { padding:18px 12px; }
+  .phrase { margin-top:12px; }
+  .choices { gap:8px; }
+  .choice { font-size:22px; padding:18px 5px; }
+  .tab { font-size:14px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  * { transition:none !important; }
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div aria-hidden="true" style="font-size:40px">☀️ ⏳</div>
+    <h1>오늘과 어제 — be동사 놀이터</h1>
+    <p class="subtitle">I am → I was! 주어와 시간을 보고 골라요.</p>
+  </header>
+
+  <nav aria-label="학습 단계">
+    <button class="tab active" data-page="present" aria-pressed="true">☀️ 현재형</button>
+    <button class="tab" data-page="past" aria-pressed="false">🌙 과거형</button>
+    <button class="tab" data-page="quiz" aria-pressed="false">⭐ 퀴즈</button>
+  </nav>
+
+  <section id="learn" class="panel" aria-labelledby="learnTitle">
+    <h2 id="learnTitle">☀️ 지금은 어떻게 말할까요?</h2>
+    <div id="learnNotice" class="notice"></div>
+    <p>주어를 눌러서 문장을 바꾸고, 소리도 들어 보세요.</p>
+    <div class="subjects" id="subjects" aria-label="주어 선택"></div>
+
+    <div class="cards">
+      <article class="card">
+        <span class="pill">☀️ 현재 · 지금</span>
+        <div class="phrase" id="presentPhrase"></div>
+        <div class="translation" id="presentMeaning"></div>
+        <button class="listen" id="presentListen">🔊 짧은 표현 듣기</button>
+        <div class="example" id="presentExample"></div>
+        <div class="translation" id="presentExampleMeaning"></div>
+        <button class="listen" id="presentExampleListen">🔊 문장 듣기</button>
+      </article>
+      <article class="card past">
+        <span class="pill past">🌙 과거 · 어제</span>
+        <div class="phrase" id="pastPhrase"></div>
+        <div class="translation" id="pastMeaning"></div>
+        <button class="listen" id="pastListen">🔊 짧은 표현 듣기</button>
+        <div class="example" id="pastExample"></div>
+        <div class="translation" id="pastExampleMeaning"></div>
+        <button class="listen" id="pastExampleListen">🔊 문장 듣기</button>
+      </article>
+    </div>
+
+    <div class="rule" id="rule"></div>
+    <div class="actions">
+      <button class="secondary" id="nextSubject">다음 주어 →</button>
+      <button class="primary" id="nextStep">과거형 공부하기 →</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>한눈에 비교해요</caption>
+        <thead><tr><th scope="col">주어</th><th scope="col">현재</th><th scope="col">과거</th></tr></thead>
+        <tbody id="summary"></tbody>
+      </table>
+    </div>
+    <p class="status" id="audioStatus" role="status"></p>
+  </section>
+
+  <section id="quiz" class="panel" hidden aria-labelledby="quizTitle">
+    <h2 id="quizTitle">⭐ 알맞은 be동사를 골라요</h2>
+    <div class="notice">
+      <strong>먼저 시간을 보고, 다음으로 주어를 보세요.</strong><br>
+      지금 → am / is / are · 어제 → was / were
+    </div>
+
+    <div class="controls">
+      <label for="mode">문제 종류</label>
+      <select id="mode">
+        <option value="present">☀️ 현재형만</option>
+        <option value="past">🌙 과거형만</option>
+        <option value="mixed" selected>☀️🌙 현재 + 과거</option>
+      </select>
+      <button class="primary" id="start">퀴즈 시작</button>
+    </div>
+    <p id="quizIntro" class="status">주어 7개를 연습해요. 현재 + 과거는 총 14문제예요.</p>
+
+    <div id="play" hidden>
+      <div class="quiz-top">
+        <strong id="counter"></strong>
+        <span id="scoreLive"></span>
+      </div>
+      <div class="track" role="progressbar" aria-label="퀴즈 진행"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress">
+        <div class="fill" id="fill"></div>
+      </div>
+      <div class="question">
+        <span class="pill" id="timeLabel"></span>
+        <p class="question-line" id="questionLine"></p>
+        <p class="translation" id="questionMeaning"></p>
+      </div>
+      <div class="choices" id="choices" aria-label="정답 선택"></div>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+      <div class="actions">
+        <button class="listen" id="answerListen" hidden>🔊 정답 문장 듣기</button>
+        <button class="primary" id="nextQuestion" hidden>다음 문제 →</button>
+      </div>
+    </div>
+
+    <div id="result" class="result" hidden aria-live="polite"></div>
+    <p class="status" id="quizAudioStatus" role="status"></p>
+  </section>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const subjects = [
+  { en:"I", ko:"나는", present:"am", past:"was" },
+  { en:"She", ko:"그녀는", present:"is", past:"was" },
+  { en:"He", ko:"그는", present:"is", past:"was" },
+  { en:"We", ko:"우리는", present:"are", past:"were" },
+  { en:"You", ko:"너는", present:"are", past:"were" },
+  { en:"It", ko:"그것은", present:"is", past:"was" },
+  { en:"They", ko:"그들은", present:"are", past:"were" }
+];
+let selected = 0;
+let page = "present";
+let questions = [];
+let position = 0;
+let correctCount = 0;
+let mistakes = [];
+let answered = false;
+let voices = [];
+
+function phrase(s, tense) {
+  return `${s.en} ${s[tense]}`;
+}
+function sentence(s, tense) {
+  const description = s.en === "It" ? "small" : "happy";
+  return `${phrase(s, tense)} ${description} ${tense === "present" ? "now" : "yesterday"}.`;
+}
+function meaning(s, tense) {
+  const description = s.en === "It"
+    ? (tense === "present" ? "작아요." : "작았어요.")
+    : (tense === "present" ? "행복해요." : "행복했어요.");
+  return `${s.ko} ${tense === "present" ? "지금" : "어제"} ${description}`;
+}
+
+function loadVoices() {
+  if ("speechSynthesis" in window) voices = speechSynthesis.getVoices();
+}
+loadVoices();
+if ("speechSynthesis" in window) {
+  speechSynthesis.addEventListener("voiceschanged", loadVoices);
+}
+function stopAudio() {
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+}
+function speak(text) {
+  const status = page === "quiz" ? $("quizAudioStatus") : $("audioStatus");
+  if (!("speechSynthesis" in window)) {
+    status.textContent = "이 브라우저에서는 문장 듣기를 지원하지 않아요.";
+    return;
+  }
+  stopAudio();
+  loadVoices();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voice = voices.find(v => /^en-US$/i.test(v.lang))
+    || voices.find(v => /^en/i.test(v.lang));
+  if (voice) utterance.voice = voice;
+  utterance.lang = voice ? voice.lang : "en-US";
+  utterance.rate = 0.8;
+  utterance.pitch = 1;
+  status.textContent = "";
+  utterance.onerror = event => {
+    if (event.error !== "interrupted" && event.error !== "canceled") {
+      status.textContent = "소리가 재생되지 않았어요. 기기 음량을 확인하고 다시 눌러 주세요.";
+    }
+  };
+  speechSynthesis.speak(utterance);
+}
+
+function renderLearning() {
+  const s = subjects[selected];
+  document.querySelectorAll(".subject").forEach((button, index) => {
+    button.classList.toggle("active", index === selected);
+    button.setAttribute("aria-pressed", String(index === selected));
+  });
+  for (const tense of ["present", "past"]) {
+    $(`${tense}Phrase`).innerHTML = `${s.en} <strong>${s[tense]}</strong>`;
+    $(`${tense}Meaning`).textContent =
+      `${s.ko} …${tense === "present" ? "이에요 / 해요" : "이었어요 / 했어요"}`;
+    $(`${tense}Example`).textContent = sentence(s, tense);
+    $(`${tense}ExampleMeaning`).textContent = meaning(s, tense);
+  }
+  $("rule").textContent = `${s.en}와 함께: ${s.present} → ${s.past}`;
+}
+
+function showPage(nextPage) {
+  page = nextPage;
+  stopAudio();
+  document.querySelectorAll(".tab").forEach(button => {
+    const active = button.dataset.page === page;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  $("learn").hidden = page === "quiz";
+  $("quiz").hidden = page !== "quiz";
+  if (page !== "quiz") {
+    $("learnTitle").textContent = page === "present"
+      ? "☀️ 지금은 어떻게 말할까요?" : "🌙 어제는 어떻게 말할까요?";
+    $("learnNotice").innerHTML = page === "present"
+      ? "<strong>지금의 상태를 말할 때는 am, is, are를 써요.</strong><br>I → am · She / He / It → is · We / You / They → are"
+      : "<strong>지난 때의 상태를 말할 때는 was, were를 써요.</strong><br>I / She / He / It → was · We / You / They → were";
+    $("nextStep").textContent = page === "present"
+      ? "과거형 공부하기 →" : "퀴즈 풀기 →";
+    renderLearning();
+  }
+}
+
+subjects.forEach((s, index) => {
+  const button = document.createElement("button");
+  button.className = "subject";
+  button.textContent = s.en;
+  button.addEventListener("click", () => {
+    stopAudio();
+    selected = index;
+    renderLearning();
+  });
+  $("subjects").appendChild(button);
+  const row = document.createElement("tr");
+  row.innerHTML = `<th scope="row">${s.en} (${s.ko})</th>
+    <td>${phrase(s, "present")}</td><td>${phrase(s, "past")}</td>`;
+  $("summary").appendChild(row);
+});
+
+document.querySelectorAll(".tab").forEach(button => {
+  button.addEventListener("click", () => showPage(button.dataset.page));
+});
+$("nextSubject").addEventListener("click", () => {
+  stopAudio();
+  selected = (selected + 1) % subjects.length;
+  renderLearning();
+});
+$("nextStep").addEventListener("click", () => {
+  showPage(page === "present" ? "past" : "quiz");
+});
+for (const tense of ["present", "past"]) {
+  $(`${tense}Listen`).addEventListener("click", () => {
+    speak(phrase(subjects[selected], tense));
+  });
+  $(`${tense}ExampleListen`).addEventListener("click", () => {
+    speak(sentence(subjects[selected], tense));
+  });
+}
+
+function shuffle(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function beginQuiz(items) {
+  stopAudio();
+  questions = shuffle(items);
+  position = 0;
+  correctCount = 0;
+  mistakes = [];
+  $("result").hidden = true;
+  $("play").hidden = false;
+  $("quizIntro").hidden = true;
+  renderQuestion();
+}
+
+$("start").addEventListener("click", () => {
+  const mode = $("mode").value;
+  const tenses = mode === "mixed" ? ["present", "past"] : [mode];
+  const items = [];
+  for (const tense of tenses) {
+    subjects.forEach((s, subjectIndex) => items.push({ subjectIndex, tense }));
+  }
+  beginQuiz(items);
+});
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[position];
+  const s = subjects[q.subjectIndex];
+  const description = s.en === "It" ? "small" : "happy";
+  $("counter").textContent = `${position + 1} / ${questions.length} 문제`;
+  $("scoreLive").textContent = `맞힌 문제 ${correctCount}개`;
+  const percent = Math.round(position / questions.length * 100);
+  $("fill").style.width = `${percent}%`;
+  $("progress").setAttribute("aria-valuenow", String(percent));
+  $("timeLabel").className = q.tense === "past" ? "pill past" : "pill";
+  $("timeLabel").textContent = q.tense === "present"
+    ? "☀️ 지금 · 현재" : "🌙 어제 · 과거";
+  $("questionLine").innerHTML =
+    `${s.en} <span class="blank" aria-label="빈칸">___</span> ${description}<br>
+    <span style="font-size:.65em">${q.tense === "present" ? "now" : "yesterday"}.</span>`;
+  $("questionMeaning").textContent = meaning(s, q.tense);
+  $("feedback").className = "feedback";
+  $("feedback").textContent = "";
+  $("nextQuestion").hidden = true;
+  $("answerListen").hidden = true;
+  $("choices").replaceChildren();
+  const options = q.tense === "present" ? ["am", "is", "are"] : ["was", "were"];
+  $("choices").style.gridTemplateColumns = `repeat(${options.length}, 1fr)`;
+  shuffle(options).forEach(option => {
+    const button = document.createElement("button");
+    button.className = "choice";
+    button.textContent = option;
+    button.addEventListener("click", () => checkAnswer(option, button));
+    $("choices").appendChild(button);
+  });
+}
+
+function checkAnswer(option, clickedButton) {
+  if (answered) return;
+  answered = true;
+  const q = questions[position];
+  const s = subjects[q.subjectIndex];
+  const answer = s[q.tense];
+  const isCorrect = option === answer;
+  if (isCorrect) correctCount++;
+  else mistakes.push({ ...q, chosen:option });
+
+  $("choices").querySelectorAll("button").forEach(button => {
+    button.disabled = true;
+    if (button.textContent === answer) button.classList.add("correct");
+  });
+  if (!isCorrect) clickedButton.classList.add("wrong");
+
+  $("scoreLive").textContent = `맞힌 문제 ${correctCount}개`;
+  $("feedback").className = `feedback ${isCorrect ? "good" : "bad"}`;
+  $("feedback").textContent =
+    `${isCorrect ? "🌟 잘했어요!" : "🌱 다시 기억해 봐요."} ` +
+    `${q.tense === "present" ? "현재" : "과거"}에서 ${s.en}와 함께 쓰는 말은 ${answer}예요. ` +
+    `정답: ${sentence(s, q.tense)}`;
+  $("answerListen").hidden = false;
+  $("nextQuestion").hidden = false;
+  $("nextQuestion").textContent =
+    position === questions.length - 1 ? "결과 보기 ⭐" : "다음 문제 →";
+  $("nextQuestion").focus();
+}
+
+$("answerListen").addEventListener("click", () => {
+  const q = questions[position];
+  speak(sentence(subjects[q.subjectIndex], q.tense));
+});
+$("nextQuestion").addEventListener("click", () => {
+  if (!answered) return;
+  stopAudio();
+  position++;
+  if (position >= questions.length) showResult();
+  else {
+    renderQuestion();
+    $("choices").querySelector("button").focus();
+  }
+});
+
+function showResult() {
+  $("play").hidden = true;
+  const result = $("result");
+  result.hidden = false;
+  result.replaceChildren();
+
+  const title = document.createElement("h3");
+  title.textContent = mistakes.length ? "👏 끝까지 연습했어요!" : "🎉 모두 맞혔어요!";
+  const score = document.createElement("div");
+  score.className = "score";
+  score.textContent = `${correctCount} / ${questions.length}`;
+  const description = document.createElement("p");
+  description.textContent = mistakes.length
+    ? "헷갈린 표현을 확인하고 한 번 더 연습해 봐요."
+    : "이제 현재와 과거 문장을 직접 말해 보세요!";
+  result.append(title, score, description);
+
+  if (mistakes.length) {
+    const review = document.createElement("div");
+    review.className = "review";
+    const heading = document.createElement("h3");
+    heading.textContent = "다시 기억할 표현";
+    review.appendChild(heading);
+    mistakes.forEach(q => {
+      const s = subjects[q.subjectIndex];
+      const item = document.createElement("div");
+      item.className = "review-item";
+      const line = document.createElement("strong");
+      line.textContent = sentence(s, q.tense);
+      const detail = document.createElement("div");
+      detail.textContent = `${meaning(s, q.tense)} 선택: ${q.chosen} → 정답: ${s[q.tense]}`;
+      const listen = document.createElement("button");
+      listen.className = "listen";
+      listen.textContent = "🔊 듣기";
+      listen.addEventListener("click", () => speak(sentence(s, q.tense)));
+      item.append(line, detail, listen);
+      review.appendChild(item);
+    });
+    result.appendChild(review);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  actions.style.justifyContent = "center";
+
+  if (mistakes.length) {
+    const retryItems = mistakes.map(({ subjectIndex, tense }) => ({ subjectIndex, tense }));
+    const retry = document.createElement("button");
+    retry.className = "primary";
+    retry.textContent = "틀린 문제 다시 풀기";
+    retry.addEventListener("click", () => beginQuiz(retryItems));
+    actions.appendChild(retry);
+  }
+  const restart = document.createElement("button");
+  restart.className = "secondary";
+  restart.textContent = "새 퀴즈 풀기";
+  restart.addEventListener("click", () => $("start").click());
+  const learn = document.createElement("button");
+  learn.className = "secondary";
+  learn.textContent = "다시 공부하기";
+  learn.addEventListener("click", () => showPage("present"));
+  actions.append(restart, learn);
+  result.appendChild(actions);
+}
+
+window.addEventListener("pagehide", stopAudio);
+showPage("present");
+</script>
+</body>
+</html>
